@@ -1,20 +1,24 @@
 package stephenowinoh.spring.security.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import stephenowinoh.spring.security.MyUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
 public class securityConfiguration {
+
+    @Autowired
+    private MyUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -46,6 +50,25 @@ public class securityConfiguration {
 //    }
 
 
+    @Bean
+    public UserDetailsService userDetailsService(){
+        return userDetailsService;
+
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+
+        // Provide the UserDetailsService to the constructor
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+
+        // Use the setter for the password encoder
+        provider.setPasswordEncoder(passwordEncoder);
+
+        return provider;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
