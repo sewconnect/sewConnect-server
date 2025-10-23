@@ -29,21 +29,23 @@ public class securityConfiguration {
                 .build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails normalUser = User.builder()
-                .username("stephen")
-                .password("$2a$12$QFy6WBM/ONKlDcbGgg.Ed.FfPNga87cLGiURi3fokPgQj2H2.KmNC")
-                .roles("USER")
-                .build();
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        UserDetails normalUser = User.builder()
+//                .username("stephen")
+//                .password("$2a$12$QFy6WBM/ONKlDcbGgg.Ed.FfPNga87cLGiURi3fokPgQj2H2.KmNC")
+//                .roles("USER")
+//                .build();
+//
+//        UserDetails adminUser = User.builder()
+//                .username("steve")
+//                .password("$2a$12$DSf./jsQHB9t7U3Uv7OIyOwkhTTte5w682a6qUkhJ3B6IAOSZqTfS")
+//                .roles("ADMIN", "USER")
+//                .build();
+//        return new InMemoryUserDetailsManager(normalUser, adminUser);
+//    }
 
-        UserDetails adminUser = User.builder()
-                .username("steve")
-                .password("$2a$12$DSf./jsQHB9t7U3Uv7OIyOwkhTTte5w682a6qUkhJ3B6IAOSZqTfS")
-                .roles("ADMIN", "USER")
-                .build();
-        return new InMemoryUserDetailsManager(normalUser, adminUser);
-    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder(){
