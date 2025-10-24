@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,13 +32,15 @@ public class securityConfiguration {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(registry -> {
-            registry.requestMatchers("/home" , "/register/**").permitAll();
+            registry.requestMatchers("/home" , "/register/**" , "/authenticate/**").permitAll();
             registry.requestMatchers("/admin/**").hasRole("ADMIN");
             registry.requestMatchers("/user/**").hasRole("USER");
             registry.anyRequest().authenticated();
 
         })
-                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(AbstractHttpConfigurer::disable) // disable basic auth
+                .formLogin(AbstractHttpConfigurer::disable) // disable form login (the key fix)
                 .build();
     }
 
