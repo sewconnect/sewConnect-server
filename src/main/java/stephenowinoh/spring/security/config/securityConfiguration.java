@@ -15,9 +15,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import stephenowinoh.spring.security.MyUserDetailsService;
 import stephenowinoh.spring.security.token.JwtAuthenticationFilter;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -34,39 +38,48 @@ public class securityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> {
-            registry.requestMatchers("/home" , "/register/**" , "/authenticate").permitAll();
-            registry.requestMatchers("/admin/**").hasRole("ADMIN");
-            registry.requestMatchers("/user/**").hasRole("USER");
-            registry.anyRequest().authenticated();
+                    // Public endpoints - no authentication needed
+                    registry.requestMatchers(
+                            "/home",
+                            "/register/**",
+                            "/authenticate"
+                    ).permitAll();
 
-        })
+                    // Admin-only endpoints
+                    registry.requestMatchers("/admin/**").hasRole("ADMIN");
+
+                    // Client-only endpoints
+                    registry.requestMatchers("/client/**").hasRole("CLIENT");
+
+                    // Tailor-only endpoints
+                    registry.requestMatchers("/tailor/**").hasRole("TAILOR");
+
+                    // All other requests require authentication
+                    registry.anyRequest().authenticated();
+                })
                 .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        UserDetails normalUser = User.builder()
-//                .username("stephen")
-//                .password("$2a$12$QFy6WBM/ONKlDcbGgg.Ed.FfPNga87cLGiURi3fokPgQj2H2.KmNC")
-//                .roles("USER")
-//                .build();
-//
-//        UserDetails adminUser = User.builder()
-//                .username("steve")
-//                .password("$2a$12$DSf./jsQHB9t7U3Uv7OIyOwkhTTte5w682a6qUkhJ3B6IAOSZqTfS")
-//                .roles("ADMIN", "USER")
-//                .build();
-//        return new InMemoryUserDetailsManager(normalUser, adminUser);
-//    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173")); // React dev servers
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public UserDetailsService userDetailsService(){
         return userDetailsService;
-
     }
 
     @Bean
@@ -74,12 +87,8 @@ public class securityConfiguration {
             UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder) {
 
-        // Provide the UserDetailsService to the constructor
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-
-        // Use the setter for the password encoder
         provider.setPasswordEncoder(passwordEncoder);
-
         return provider;
     }
 
@@ -91,7 +100,6 @@ public class securityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
-
     }
 }
 
