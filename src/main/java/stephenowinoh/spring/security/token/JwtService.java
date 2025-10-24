@@ -28,10 +28,10 @@ public class JwtService {
         return Jwts.builder()
                 .claims(claims)
                 .subject(userDetails.getUsername())
-                .issuedAt(Date.from(Instant.now().plusMillis(VALIDITY)))
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plusMillis(VALIDITY)))
                 .signWith(generateKey())
                 .compact();
-
 
     }
 
