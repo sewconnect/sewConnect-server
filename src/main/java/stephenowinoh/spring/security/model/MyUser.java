@@ -26,6 +26,8 @@ public class MyUser {
     private String specialty; // e.g., "Wedding & Evening Wear Specialist"
     private String location;  // e.g., "Westlands, Nairobi"
 
+    private String nationality;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -89,5 +91,13 @@ public class MyUser {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
     }
 }
