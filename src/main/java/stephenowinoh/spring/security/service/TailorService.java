@@ -2,8 +2,13 @@ package stephenowinoh.spring.security.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import stephenowinoh.spring.security.DTO.GalleryDTO;
+import stephenowinoh.spring.security.DTO.ServiceDTO;
 import stephenowinoh.spring.security.DTO.TailorDTO;
+import stephenowinoh.spring.security.DTO.TailorProfileDTO;
 import stephenowinoh.spring.security.mapper.TailorMapper;
+import stephenowinoh.spring.security.model.MyUser;
+import stephenowinoh.spring.security.repository.FollowRepository;
 import stephenowinoh.spring.security.repository.MyUserRepository;
 
 import java.util.List;
@@ -15,9 +20,17 @@ public class TailorService {
     @Autowired
     private MyUserRepository myUserRepository;
 
+    @Autowired
+    private FollowRepository followRepository;
+
+    @Autowired
+    private TailorServiceManager tailorServiceManager;
+
+    @Autowired
+    private GalleryService galleryService;
+
     /**
-     * Get all tailors
-     * Used for: Dashboard display
+     * Get all tailors (for dashboard listing)
      */
     public List<TailorDTO> getAllTailors() {
         return myUserRepository.findByRole("TAILOR").stream()
@@ -27,7 +40,6 @@ public class TailorService {
 
     /**
      * Get tailors by specialty
-     * Used for: Filter buttons (Suits, Dresses, Traditional, etc.)
      */
     public List<TailorDTO> getTailorsBySpecialty(String specialty) {
         return myUserRepository.findByRoleAndSpecialty("TAILOR", specialty).stream()
@@ -37,7 +49,6 @@ public class TailorService {
 
     /**
      * Get tailors by nationality
-     * Used for: Country filter
      */
     public List<TailorDTO> getTailorsByNationality(String nationality) {
         return myUserRepository.findByRoleAndNationality("TAILOR", nationality).stream()
@@ -46,8 +57,7 @@ public class TailorService {
     }
 
     /**
-     * Search tailors by name, location, or nationality
-     * Used for: Search bar
+     * Search tailors by query
      */
     public List<TailorDTO> searchTailors(String query) {
         return myUserRepository.searchTailorsByQuery("TAILOR", query).stream()
@@ -56,8 +66,7 @@ public class TailorService {
     }
 
     /**
-     * Get tailor by ID
-     * Used for: View tailor profile page
+     * Get simple tailor by ID (for listing)
      */
     public TailorDTO getTailorById(Long id) {
         return myUserRepository.findById(id)
@@ -67,8 +76,47 @@ public class TailorService {
     }
 
     /**
-     * Get total number of tailors
-     * Used for: Statistics/dashboard stats
+     * Get FULL tailor profile (with services, galleries, followers)
+     * This is what we'll use for the profile page!
+     */
+    public TailorProfileDTO getTailorProfile(Long id) {
+        MyUser tailor = myUserRepository.findById(id)
+                .filter(user -> "TAILOR".equals(user.getRole()))
+                .orElse(null);
+
+        if (tailor == null) {
+            return null;
+        }
+
+        TailorProfileDTO profile = new TailorProfileDTO();
+
+        // Basic info
+        profile.setId(tailor.getId());
+        profile.setFullName(tailor.getFullName());
+        profile.setUsername(tailor.getUsername());
+        profile.setPhoneNumber(tailor.getPhoneNumber());
+        profile.setSpecialty(tailor.getSpecialty());
+        profile.setLocation(tailor.getLocation());
+        profile.setNationality(tailor.getNationality());
+
+        // Stats
+        profile.setTotalFollowers((int) followRepository.countByFollowing(tailor));
+        profile.setTotalFollowing((int) followRepository.countByFollower(tailor));
+        profile.setTotalGalleries((int) galleryService.getGalleryCount(id));
+
+        // Services
+        List<ServiceDTO> services = tailorServiceManager.getServicesByTailorId(id);
+        profile.setServices(services);
+
+        // Galleries
+        List<GalleryDTO> galleries = galleryService.getGalleriesByTailorId(id);
+        profile.setGalleries(galleries);
+
+        return profile;
+    }
+
+    /**
+     * Get total tailor count
      */
     public long getTailorCount() {
         return myUserRepository.countByRole("TAILOR");
@@ -76,7 +124,6 @@ public class TailorService {
 
     /**
      * Check if tailor exists
-     * Used for: Validation before booking
      */
     public boolean tailorExists(Long id) {
         return myUserRepository.findById(id)
