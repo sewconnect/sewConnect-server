@@ -99,9 +99,10 @@ public class TailorService {
         profile.setLocation(tailor.getLocation());
         profile.setNationality(tailor.getNationality());
 
+
         // Stats
-        profile.setTotalFollowers((int) followRepository.countByFollowing(tailor));
-        profile.setTotalFollowing((int) followRepository.countByFollower(tailor));
+        profile.setTotalFollowers(followRepository.countByTailor(tailor).intValue());
+        profile.setTotalFollowing(followRepository.countByFollower(tailor).intValue());
         profile.setTotalGalleries((int) galleryService.getGalleryCount(id));
 
         // Services

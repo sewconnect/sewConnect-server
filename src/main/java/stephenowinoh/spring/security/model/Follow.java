@@ -1,34 +1,40 @@
 package stephenowinoh.spring.security.model;
 
-
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "follows", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+        @UniqueConstraint(columnNames = {"follower_id", "tailor_id"})
 })
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Follow {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "follower_id", nullable = false)
-    private MyUser follower; // The person who is following
+    private MyUser follower;  // The user who is following
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "following_id", nullable = false)
-    private MyUser following; // The person being followed (usually a tailor)
+    @JoinColumn(name = "tailor_id", nullable = false)
+    private MyUser tailor;    // The tailor being followed
 
-    @Column(nullable = false)
-    private LocalDateTime followedAt;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        followedAt = LocalDateTime.now();
-    }
+    @Column(name = "is_active", nullable = false)
+    private Boolean active = true;
 
     // Getters and Setters
     public Long getId() {
@@ -47,19 +53,32 @@ public class Follow {
         this.follower = follower;
     }
 
-    public MyUser getFollowing() {
-        return following;
+    public MyUser getTailor() {
+        return tailor;
     }
 
-    public void setFollowing(MyUser following) {
-        this.following = following;
+    public void setTailor(MyUser tailor) {
+        this.tailor = tailor;
     }
 
-    public LocalDateTime getFollowedAt() {
-        return followedAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setFollowedAt(LocalDateTime followedAt) {
-        this.followedAt = followedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    // Convenience methods
+    public Boolean isActive() {
+        return active;
     }
 }

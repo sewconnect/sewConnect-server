@@ -40,23 +40,35 @@ public class securityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> {
-                    // Public endpoints - no authentication needed
+                    // ✅ PUBLIC ENDPOINTS - NO AUTHENTICATION REQUIRED
                     registry.requestMatchers(
                             "/home",
                             "/register/**",
                             "/authenticate"
                     ).permitAll();
 
-                    // Admin-only endpoints
+                    //ADMIN-ONLY ENDPOINTS
                     registry.requestMatchers("/admin/**").hasRole("ADMIN");
 
-                    // Client-only endpoints
+                    //CLIENT-ONLY ENDPOINTS
                     registry.requestMatchers("/client/**").hasRole("CLIENT");
 
-                    // Tailor-only endpoints
+                    //TAILOR-ONLY ENDPOINTS
                     registry.requestMatchers("/tailor/**").hasRole("TAILOR");
 
-                    // All other requests require authentication
+                    //TAILORS CAN CREATE/UPDATE/DELETE THEIR SERVICES AND GALLERIES
+                    registry.requestMatchers(
+                            "/api/services",
+                            "/api/services/*",
+                            "/api/galleries",
+                            "/api/galleries/*"
+                    ).hasAnyRole("TAILOR", "ADMIN");
+
+                    // ALL OTHER ENDPOINTS REQUIRE AUTHENTICATION
+                    // This includes:
+                    // - /api/tailors/** (view tailors, profiles) - any authenticated user
+                    // - /api/follows/** (follow/unfollow) - any authenticated user
+                    // - Any other API endpoints - any authenticated user
                     registry.anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder()))
@@ -67,7 +79,7 @@ public class securityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173")); // React dev servers
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
@@ -102,5 +114,3 @@ public class securityConfiguration {
         return new BCryptPasswordEncoder();
     }
 }
-
-

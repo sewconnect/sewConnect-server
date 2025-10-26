@@ -1,14 +1,19 @@
 package stephenowinoh.spring.security.DTO;
 
-
-
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
  * Enhanced DTO for Tailor Profile Page
- * Includes tailor info + services + galleries
+ * Includes tailor info + services + galleries + followers
  */
+
+@NoArgsConstructor
+@AllArgsConstructor
 public class TailorProfileDTO {
+
     // Basic Tailor Info
     private Long id;
     private String fullName;
@@ -20,11 +25,11 @@ public class TailorProfileDTO {
 
     // Profile Stats
     private Integer totalGalleries;
-    private Integer totalFollowers;  // We'll implement this later
-    private Integer totalFollowing;  // We'll implement this later
+    private Integer totalFollowers;
+    private Integer totalFollowing;
 
     // About section
-    private String bio; // We'll add this field to MyUser model later
+    private String bio;
 
     // Services & Pricing
     private List<ServiceDTO> services;
@@ -32,10 +37,6 @@ public class TailorProfileDTO {
     // Galleries
     private List<GalleryDTO> galleries;
 
-    // Constructors
-    public TailorProfileDTO() {}
-
-    // Getters and Setters
     public Long getId() {
         return id;
     }

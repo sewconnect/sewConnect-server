@@ -1,28 +1,36 @@
 package stephenowinoh.spring.security.repository;
 
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import stephenowinoh.spring.security.model.Follow;
 import stephenowinoh.spring.security.model.MyUser;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
 
-    // Count followers (people who follow this user)
-    long countByFollowing(MyUser following);
+    boolean existsByFollowerIdAndTailorIdAndActiveTrue(Long followerId, Long tailorId);
 
-    // Count following (people this user follows)
-    long countByFollower(MyUser follower);
+    Optional<Follow> findByFollowerIdAndTailorIdAndActiveTrue(Long followerId, Long tailorId);
 
-    // Check if user A follows user B
-    boolean existsByFollowerAndFollowing(MyUser follower, MyUser following);
+    Optional<Follow> findByFollowerIdAndTailorId(Long followerId, Long tailorId);
 
-    // Find specific follow relationship
-    Optional<Follow> findByFollowerAndFollowing(MyUser follower, MyUser following);
+    List<Follow> findByTailorIdAndActiveTrueOrderByCreatedAtDesc(Long tailorId);
 
-    // Delete follow relationship
-    void deleteByFollowerAndFollowing(MyUser follower, MyUser following);
+    List<Follow> findByFollowerIdAndActiveTrueOrderByCreatedAtDesc(Long followerId);
+
+    long countByTailorIdAndActiveTrue(Long tailorId);
+
+    long countByFollowerIdAndActiveTrue(Long followerId);
+
+    Long countByFollower(MyUser follower);
+
+    Long countByTailor(MyUser tailor);
+
+    @Query("SELECT f FROM Follow f WHERE f.tailor.id = :tailorId AND f.active = true AND f.tailor.role = 'TAILOR' ORDER BY f.createdAt DESC")
+    List<Follow> findFollowersByTailorId(@Param("tailorId") Long tailorId);
 }
