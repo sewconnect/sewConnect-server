@@ -22,6 +22,9 @@ public interface MyUserRepository extends JpaRepository<MyUser, Long> {
 
     List<MyUser> findByRoleAndNationality(String role, String nationality);
 
+    Optional<MyUser> findByEmail(String email);
+    boolean existsByEmail(String email);
+
     @Query("SELECT u FROM MyUser u WHERE u.role = :role AND " +
             "(LOWER(u.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(u.location) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
@@ -30,3 +33,5 @@ public interface MyUserRepository extends JpaRepository<MyUser, Long> {
 
     long countByRole(String role);
 }
+
+

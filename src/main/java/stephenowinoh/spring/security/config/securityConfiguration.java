@@ -44,8 +44,10 @@ public class securityConfiguration {
                     registry.requestMatchers(
                             "/home",
                             "/register/**",
-                            "/authenticate"
+                            "/authenticate",
+                            "/ws/**"
                     ).permitAll();
+
 
                     //ADMIN-ONLY ENDPOINTS
                     registry.requestMatchers("/admin/**").hasRole("ADMIN");

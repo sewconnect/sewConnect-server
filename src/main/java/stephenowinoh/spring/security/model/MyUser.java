@@ -3,43 +3,45 @@ package stephenowinoh.spring.security.model;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
-public class MyUser {
+public class MyUser implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username; // This will be the email
+    private String username;
 
     @Column(unique = true, nullable = false)
-    private String email; // Explicit email field
+    private String email;
 
     @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
-    private String role; // "CLIENT", "TAILOR", or "ADMIN"
+    private String role;
 
     @Column(nullable = false)
-    private Boolean isActive = true; // Track if user account is active
+    private Boolean isActive = true;
 
-    // User profile fields
     private String fullName;
     private String phoneNumber;
-
-    // Tailor-specific fields (null for clients)
-    private String specialty; // e.g., "Wedding & Evening Wear Specialist"
-    private String location;  // e.g., "Westlands, Nairobi"
+    private String specialty;
+    private String location;
     private String nationality;
 
-    // Timestamps
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -48,39 +50,62 @@ public class MyUser {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ============================================
-    // RELATIONSHIP MAPPINGS
-    // ============================================
-
-    /**
-     * Users who are following this user (if this user is a tailor)
-     * This represents the FOLLOWERS
-     */
     @OneToMany(mappedBy = "tailor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Follow> followers = new ArrayList<>();
 
-    /**
-     * Tailors that this user is following
-     * This represents who the user is FOLLOWING
-     */
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Follow> following = new ArrayList<>();
 
-    /**
-     * Galleries owned by this tailor
-     */
     @OneToMany(mappedBy = "tailor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Gallery> galleries = new ArrayList<>();
 
-    /**
-     * Services offered by this tailor
-     */
     @OneToMany(mappedBy = "tailor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Service> services = new ArrayList<>();
 
-    // ============================================
-    // GETTERS AND SETTERS
-    // ============================================
+    // UserDetails Implementation
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (role == null) {
+            return List.of(new SimpleGrantedAuthority("ROLE_CLIENT"));
+        }
+        return Arrays.stream(role.split(","))
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.trim()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isActive;
+    }
+
+   //getter setter
 
     public Long getId() {
         return id;
@@ -88,10 +113,6 @@ public class MyUser {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public void setUsername(String username) {
@@ -104,10 +125,6 @@ public class MyUser {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public void setPassword(String password) {
@@ -186,7 +203,6 @@ public class MyUser {
         this.updatedAt = updatedAt;
     }
 
-    // Relationship getters and setters
     public List<Follow> getFollowers() {
         return followers;
     }
