@@ -43,13 +43,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             MessageMatcherDelegatingAuthorizationManager.Builder messages) {
 
         messages
-                .nullDestMatcher().permitAll()  // Back to permitAll
+                .nullDestMatcher().permitAll()
                 .simpTypeMatchers(SimpMessageType.CONNECT).permitAll()
                 .simpTypeMatchers(
                         SimpMessageType.DISCONNECT,
                         SimpMessageType.HEARTBEAT,
                         SimpMessageType.UNSUBSCRIBE
-                ).permitAll()  // Change these to permitAll too
+                ).permitAll()
                 .simpSubscribeDestMatchers("/user/queue/**", "/topic/**").authenticated()
                 .simpDestMatchers("/app/**").authenticated()
                 .anyMessage().authenticated();
@@ -59,11 +59,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableStompBrokerRelay("/topic", "/queue")
-                .setRelayHost("localhost")
-                .setRelayPort(61613)
-                .setClientLogin("guest")
-                .setClientPasscode("guest");
+        // CHANGED: Use Simple Broker instead of STOMP Broker Relay
+        // Simple Broker is in-memory and doesn't require external RabbitMQ/STOMP
+        config.enableSimpleBroker("/topic", "/queue");
 
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
@@ -90,7 +88,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     System.out.println("=== WEBSOCKET CONNECT ATTEMPT ===");
-
 
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
                     System.out.println("Auth header present: " + (authHeader != null));
@@ -132,6 +129,5 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             }
         });
     }
-
 }
 
