@@ -16,7 +16,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://sewconnectplatform.vercel.app"
+})
+
 public class NotificationController {
 
     @Autowired

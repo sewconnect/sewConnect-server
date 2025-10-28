@@ -13,7 +13,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/register")
-@CrossOrigin(origins = "*") // Allow frontend to connect
+//@CrossOrigin(origins = "*") // Allow frontend to connect
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://sewconnectplatform.vercel.app"
+})
 public class RegistrationController {
 
     @Autowired

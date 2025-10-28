@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: sewconnect-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://dpg-d40er3odl3ps73bnq5a0-a.oregon-postgres.render.com:5432/sewconnect
+      - key: SPRING_DATASOURCE_USERNAME
+        value: sewconnect_user
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false # Set this in Render Dashboard as sensitive
+      - key: SPRING_RABBITMQ_HOST
+        value: localhost
+      - key: SPRING_RABBITMQ_PORT
+        value: 5672
+      - key: SPRING_RABBITMQ_USERNAME
+        value: guest
+      - key: SPRING_RABBITMQ_PASSWORD
+        value: guest
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: WEBSOCKET_ALLOWED_ORIGINS
+        value: https://sewconnectplatform.vercel.app,http://localhost:3000,http://localhost:5173
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx512m -Xms256m
