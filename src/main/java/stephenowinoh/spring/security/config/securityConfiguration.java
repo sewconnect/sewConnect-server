@@ -45,20 +45,22 @@ public class securityConfiguration {
                             "/home",
                             "/register/**",
                             "/authenticate",
-                            "/ws/**"
+                            "/ws/**"  // WebSocket endpoints
                     ).permitAll();
 
+                    // CHAT ENDPOINTS - REQUIRE AUTHENTICATION (ANY AUTHENTICATED USER)
+                    registry.requestMatchers("/api/chat/**").authenticated();
 
-                    //ADMIN-ONLY ENDPOINTS
+                    // ADMIN-ONLY ENDPOINTS
                     registry.requestMatchers("/admin/**").hasRole("ADMIN");
 
-                    //CLIENT-ONLY ENDPOINTS
+                    // CLIENT-ONLY ENDPOINTS
                     registry.requestMatchers("/client/**").hasRole("CLIENT");
 
-                    //TAILOR-ONLY ENDPOINTS
+                    // TAILOR-ONLY ENDPOINTS
                     registry.requestMatchers("/tailor/**").hasRole("TAILOR");
 
-                    //TAILORS CAN CREATE/UPDATE/DELETE THEIR SERVICES AND GALLERIES
+                    // TAILORS CAN CREATE/UPDATE/DELETE THEIR SERVICES AND GALLERIES
                     registry.requestMatchers(
                             "/api/services",
                             "/api/services/*",
@@ -67,10 +69,6 @@ public class securityConfiguration {
                     ).hasAnyRole("TAILOR", "ADMIN");
 
                     // ALL OTHER ENDPOINTS REQUIRE AUTHENTICATION
-                    // This includes:
-                    // - /api/tailors/** (view tailors, profiles) - any authenticated user
-                    // - /api/follows/** (follow/unfollow) - any authenticated user
-                    // - Any other API endpoints - any authenticated user
                     registry.anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder()))
@@ -85,6 +83,7 @@ public class securityConfiguration {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Important for JWT
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

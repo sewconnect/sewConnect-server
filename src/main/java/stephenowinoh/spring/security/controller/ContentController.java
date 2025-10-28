@@ -32,35 +32,29 @@ public class ContentController {
     @Autowired
     private MyUserRepository myUserRepository;
 
-    // Public home page
     @GetMapping("/home")
     public String handleWelcome() {
         return "Welcome to SewStyles - Connect with Professional Tailors";
     }
 
-    // Admin dashboard
     @GetMapping("/admin/home")
     public String handleAdminHome(){
         return "Admin Dashboard - Manage Platform";
     }
 
-    // Client dashboard
     @GetMapping("/client/home")
     public String handleClientHome(){
         return "Client Dashboard - Find Your Perfect Tailor";
     }
 
-    // Tailor dashboard
     @GetMapping("/tailor/home")
     public String handleTailorHome(){
         return "Tailor Dashboard - Manage Your Bookings";
     }
 
-    // Login endpoint - Returns JWT token with user details
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticateAndGetToken(@RequestBody LoginForm loginForm){
         try {
-            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginForm.username(),
@@ -69,22 +63,20 @@ public class ContentController {
             );
 
             if (authentication.isAuthenticated()) {
-                // Load user details
                 var userDetails = myUserDetailsService.loadUserByUsername(loginForm.username());
 
-                // Get full user entity from database to access id and role
                 MyUser user = myUserRepository.findByUsername(loginForm.username())
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-                // Generate JWT token
-                String token = jwtService.generateToken(userDetails);
+                // CRITICAL FIX: Pass userId to JWT generation
+                String token = jwtService.generateToken(userDetails, user.getId());
 
-                // Return token with complete user info
                 return ResponseEntity.ok(Map.of(
                         "token", token,
                         "id", user.getId(),
                         "username", user.getUsername(),
                         "role", user.getRole(),
+                        "fullName", user.getFullName() != null ? user.getFullName() : "",
                         "message", "Login successful"
                 ));
             } else {

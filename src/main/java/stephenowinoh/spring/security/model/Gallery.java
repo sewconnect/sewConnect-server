@@ -3,6 +3,8 @@ package stephenowinoh.spring.security.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "galleries")
@@ -47,6 +49,28 @@ public class Gallery {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @OneToMany(mappedBy = "gallery", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<GalleryImage> images = new ArrayList<>();
+
+    public List<GalleryImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<GalleryImage> images) {
+        this.images = images;
+    }
+
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     // Getters and Setters

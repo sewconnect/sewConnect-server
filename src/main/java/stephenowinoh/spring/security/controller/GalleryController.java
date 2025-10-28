@@ -18,6 +18,22 @@ public class GalleryController {
     private GalleryService galleryService;
 
     /**
+     * GET /api/galleries/{galleryId}
+     * Get a single gallery by ID
+     */
+    @GetMapping("/{galleryId}")
+    public ResponseEntity<?> getGalleryById(@PathVariable Long galleryId) {
+        try {
+            GalleryDTO gallery = galleryService.getGalleryById(galleryId);
+            return ResponseEntity.ok(gallery);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/galleries/tailor/{tailorId}
      * Get all galleries for a specific tailor
      */

@@ -50,4 +50,5 @@ public class ParticipantDTO {
     public void setJoinedAt(LocalDateTime joinedAt) {
         this.joinedAt = joinedAt;
     }
+
 }

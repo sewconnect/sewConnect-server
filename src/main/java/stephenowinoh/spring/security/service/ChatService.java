@@ -37,6 +37,10 @@ public class ChatService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    // Inject NotificationService
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public ConversationDTO createConversation(CreateConversationRequest request, Long creatorId) {
         MyUser creator = userRepository.findById(creatorId)
@@ -94,10 +98,25 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public List<ConversationDTO> getUserConversations(Long userId) {
+        System.out.println("=== GET USER CONVERSATIONS ===");
+        System.out.println("User ID: " + userId);
+
+        MyUser user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            System.err.println("❌ User not found with ID: " + userId);
+            return List.of();
+        }
+        System.out.println("✅ User found: " + user.getUsername());
+
         List<Conversation> conversations = conversationRepository.findByUserId(userId);
-        return conversations.stream()
+        System.out.println("📋 Found " + conversations.size() + " conversations");
+
+        List<ConversationDTO> dtos = conversations.stream()
                 .map(conv -> convertToDTO(conv, userId))
                 .collect(Collectors.toList());
+
+        System.out.println("✅ Returning " + dtos.size() + " conversation DTOs");
+        return dtos;
     }
 
     @Transactional(readOnly = true)
@@ -135,28 +154,32 @@ public class ChatService {
         message.setSender(sender);
         message.setContent(request.getContent());
         message.setIsEdited(false);
+        message.setIsRead(false);
 
         message = messageRepository.save(message);
 
         ChatMessageDTO messageDTO = convertMessageToDTO(message);
+
+        List<ConversationParticipant> participants = participantRepository
+                .findByConversationId(conversation.getId());
+
+        for (ConversationParticipant participant : participants) {
+            MyUser user = participant.getUser();
+
+            messagingTemplate.convertAndSendToUser(
+                    user.getUsername(),
+                    "/queue/messages",
+                    messageDTO
+            );
+
+            System.out.println("Sent message to user: " + user.getUsername());
+        }
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.CHAT_EXCHANGE,
                 RabbitMQConfig.CHAT_ROUTING_KEY,
                 messageDTO
         );
-
-        List<ConversationParticipant> participants = participantRepository
-                .findByConversationId(conversation.getId());
-
-        for (ConversationParticipant participant : participants) {
-            messagingTemplate.convertAndSendToUser(
-                    participant.getUser().getUsername(),
-                    "/queue/messages",
-                    messageDTO
-            );
-
-        }
 
         return messageDTO;
     }
@@ -185,12 +208,16 @@ public class ChatService {
 
     @Transactional
     public void markAsRead(Long conversationId, Long userId) {
+        // ✅ UPDATED: Mark participant's last read time
         ConversationParticipant participant = participantRepository
                 .findByConversationIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new RuntimeException("Participant not found"));
 
         participant.setLastReadAt(LocalDateTime.now());
         participantRepository.save(participant);
+
+        // ✅ NEW: Mark all unread messages in this conversation as read
+        messageRepository.markConversationMessagesAsRead(conversationId, userId);
     }
 
     @Transactional
@@ -219,6 +246,12 @@ public class ChatService {
         }
 
         return convertToDTO(conversation, requesterId);
+    }
+
+    //Get total unread message count for a user
+    @Transactional(readOnly = true)
+    public Long getUnreadMessageCount(Long userId) {
+        return messageRepository.countUnreadMessagesByUserId(userId);
     }
 
     private ConversationDTO convertToDTO(Conversation conversation, Long currentUserId) {
@@ -252,22 +285,9 @@ public class ChatService {
             dto.setLastMessage(convertMessageToDTO(lastMessages.get(0)));
         }
 
-        ConversationParticipant currentParticipant = participantRepository
-                .findByConversationIdAndUserId(conversation.getId(), currentUserId)
-                .orElse(null);
-
-        if (currentParticipant != null && currentParticipant.getLastReadAt() != null) {
-            List<Message> allMessages = messageRepository
-                    .findByConversationIdOrderByCreatedAtDesc(conversation.getId());
-
-            long unreadCount = allMessages.stream()
-                    .filter(m -> m.getCreatedAt().isAfter(currentParticipant.getLastReadAt())
-                            && !m.getSender().getId().equals(currentUserId))
-                    .count();
-            dto.setUnreadCount((int) unreadCount);
-        } else {
-            dto.setUnreadCount(0);
-        }
+        // Calculate unread count using new isRead field
+        Long unreadCount = messageRepository.countUnreadInConversation(conversation.getId(), currentUserId);
+        dto.setUnreadCount(unreadCount.intValue());
 
         return dto;
     }

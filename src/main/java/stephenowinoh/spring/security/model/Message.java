@@ -33,6 +33,10 @@ public class Message {
     @Column(name = "is_edited", nullable = false)
     private Boolean isEdited = false;
 
+    //  Track if message has been read by recipient
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false;
+
     public Long getId() {
         return id;
     }
@@ -79,5 +83,14 @@ public class Message {
 
     public void setIsEdited(Boolean isEdited) {
         this.isEdited = isEdited;
+    }
+
+    // Getter/Setter for isRead
+    public Boolean getIsRead() {
+        return isRead;
+    }
+
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
     }
 }
