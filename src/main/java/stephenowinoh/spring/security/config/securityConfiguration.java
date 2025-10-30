@@ -45,7 +45,8 @@ public class securityConfiguration {
                             "/home",
                             "/register/**",
                             "/authenticate",
-                            "/ws/**"  // WebSocket endpoints
+                            "/ws/**",
+                            "/api/ai/**"
                     ).permitAll();
 
                     // CHAT ENDPOINTS - REQUIRE AUTHENTICATION (ANY AUTHENTICATED USER)
