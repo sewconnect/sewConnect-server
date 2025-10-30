@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 import stephenowinoh.spring.security.MyUserDetailsService;
+import io.jsonwebtoken.ExpiredJwtException;
 
 import java.io.IOException;
 
@@ -64,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = myUserDetailService.loadUserByUsername(username);
 
+                // ✅ ENHANCED: Check if token is valid (not expired)
                 if (userDetails != null && jwtService.isTokenValid(jwt)) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -78,18 +80,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         System.out.println("Authorities: " + userDetails.getAuthorities());
                     }
                 } else {
+                    // ✅ Token is invalid or expired
                     if (requestPath.contains("/api/chat")) {
                         System.out.println("Token validation FAILED");
                     }
+
+                    // ✅ Send 401 Unauthorized response
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Token expired or invalid\", \"message\": \"Please log in again\"}");
+                    return; // Don't continue filter chain
                 }
             } else if (requestPath.contains("/api/chat")) {
                 System.out.println("Username is null or already authenticated");
             }
+
+        } catch (ExpiredJwtException e) {
+            // ✅ HANDLE EXPIRED JWT SPECIFICALLY
+            System.err.println("🔴 JWT Token expired: " + e.getMessage());
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Token expired\", \"message\": \"Your session has expired. Please log in again.\"}");
+            return; // Don't continue filter chain
+
         } catch (Exception e) {
+            // ✅ HANDLE OTHER JWT EXCEPTIONS
             if (requestPath.contains("/api/chat")) {
                 System.err.println("Exception in JWT filter: " + e.getMessage());
                 e.printStackTrace();
             }
+
+            // Log the error but continue filter chain for other exceptions
+            System.err.println("JWT Filter Exception: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
