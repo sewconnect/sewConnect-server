@@ -19,7 +19,8 @@ import java.util.concurrent.TimeUnit;
 public class JwtService {
 
     private static final String SECRET = "57856024E56C15D353DE5765F7FF0C85958A1D88F5F164A2999F8A38CB52D7FA9F4FF05395EE2E082D9FEC8B8F1ED4D20EDE7C92D582F1ECF9C8D5D20081D04A";
-    private static final Long VALIDITY = TimeUnit.MINUTES.toMillis(30);
+    private static final Long VALIDITY = TimeUnit.MINUTES.toMillis(3);
+
 
     // NEW METHOD: Generate token with userId claim
     public String generateToken(UserDetails userDetails, Long userId) {
