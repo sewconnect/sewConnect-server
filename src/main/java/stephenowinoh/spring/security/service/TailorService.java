@@ -1,17 +1,23 @@
 package stephenowinoh.spring.security.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import stephenowinoh.spring.security.DTO.GalleryDTO;
 import stephenowinoh.spring.security.DTO.ServiceDTO;
 import stephenowinoh.spring.security.DTO.TailorDTO;
 import stephenowinoh.spring.security.DTO.TailorProfileDTO;
+import stephenowinoh.spring.security.DTO.ProfileUpdateRequest;
 import stephenowinoh.spring.security.mapper.TailorMapper;
 import stephenowinoh.spring.security.model.MyUser;
 import stephenowinoh.spring.security.repository.FollowRepository;
 import stephenowinoh.spring.security.repository.MyUserRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +34,9 @@ public class TailorService {
 
     @Autowired
     private GalleryService galleryService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     /**
      * Get all tailors (for dashboard listing)
@@ -77,7 +86,6 @@ public class TailorService {
 
     /**
      * Get FULL tailor profile (with services, galleries, followers)
-     * This is what we'll use for the profile page!
      */
     public TailorProfileDTO getTailorProfile(Long id) {
         MyUser tailor = myUserRepository.findById(id)
@@ -98,7 +106,9 @@ public class TailorService {
         profile.setSpecialty(tailor.getSpecialty());
         profile.setLocation(tailor.getLocation());
         profile.setNationality(tailor.getNationality());
-
+        profile.setProfilePictureUrl(tailor.getProfilePictureUrl());
+        profile.setProfilePicturePublicId(tailor.getProfilePicturePublicId());
+        profile.setBio(tailor.getBio());
 
         // Stats
         profile.setTotalFollowers(followRepository.countByTailor(tailor).intValue());
@@ -115,6 +125,138 @@ public class TailorService {
 
         return profile;
     }
+
+    // ========== PROFILE MANAGEMENT METHODS ==========
+
+    /**
+     * Update profile picture
+     */
+    public boolean updateProfilePicture(Long id, String profilePictureUrl, String publicId) {
+        return myUserRepository.findById(id)
+                .filter(user -> "TAILOR".equals(user.getRole()))
+                .map(user -> {
+                    // Delete old profile picture from Cloudinary if exists
+                    if (user.getProfilePicturePublicId() != null && !user.getProfilePicturePublicId().isEmpty()) {
+                        try {
+                            cloudinary.uploader().destroy(user.getProfilePicturePublicId(), ObjectUtils.emptyMap());
+                        } catch (Exception e) {
+                            System.err.println("Failed to delete old profile picture: " + e.getMessage());
+                            // Continue anyway - we still want to update with new picture
+                        }
+                    }
+
+                    user.setProfilePictureUrl(profilePictureUrl);
+                    user.setProfilePicturePublicId(publicId);
+                    myUserRepository.save(user);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /**
+     * Delete profile picture (also deletes from Cloudinary)
+     */
+    public boolean deleteProfilePicture(Long id) {
+        return myUserRepository.findById(id)
+                .filter(user -> "TAILOR".equals(user.getRole()))
+                .map(user -> {
+                    String publicId = user.getProfilePicturePublicId();
+
+                    // Delete from Cloudinary if publicId exists
+                    if (publicId != null && !publicId.isEmpty()) {
+                        try {
+                            Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                            System.out.println("Cloudinary delete result: " + result.get("result"));
+                        } catch (Exception e) {
+                            System.err.println("Failed to delete from Cloudinary: " + e.getMessage());
+                            // Continue anyway - we still want to remove from database
+                        }
+                    }
+
+                    // Clear from database
+                    user.setProfilePictureUrl(null);
+                    user.setProfilePicturePublicId(null);
+                    myUserRepository.save(user);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /**
+     * Update profile information
+     */
+    public TailorProfileDTO updateProfile(Long id, ProfileUpdateRequest request) {
+        MyUser tailor = myUserRepository.findById(id)
+                .filter(user -> "TAILOR".equals(user.getRole()))
+                .orElse(null);
+
+        if (tailor == null) {
+            return null;
+        }
+
+        // Update fields if provided
+        if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
+            tailor.setFullName(request.getFullName().trim());
+        }
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
+            tailor.setPhoneNumber(request.getPhoneNumber().trim());
+        }
+        if (request.getLocation() != null && !request.getLocation().trim().isEmpty()) {
+            tailor.setLocation(request.getLocation().trim());
+        }
+        if (request.getSpecialty() != null && !request.getSpecialty().trim().isEmpty()) {
+            tailor.setSpecialty(request.getSpecialty().trim());
+        }
+        if (request.getNationality() != null && !request.getNationality().trim().isEmpty()) {
+            tailor.setNationality(request.getNationality().trim());
+        }
+        if (request.getBio() != null) {
+            tailor.setBio(request.getBio().trim());
+        }
+
+        myUserRepository.save(tailor);
+
+        return getTailorProfile(id);
+    }
+
+    /**
+     * Update specialty
+     */
+    public boolean updateSpecialty(Long id, String specialty) {
+        return myUserRepository.findById(id)
+                .filter(user -> "TAILOR".equals(user.getRole()))
+                .map(user -> {
+                    user.setSpecialty(specialty.trim());
+                    myUserRepository.save(user);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /**
+     * Check if user is the owner of the profile
+     */
+    public boolean isOwner(Long tailorId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetails)) {
+            return false;
+        }
+
+        String username = ((UserDetails) principal).getUsername();
+        MyUser currentUser = myUserRepository.findByUsername(username).orElse(null);
+
+        if (currentUser == null) {
+            return false;
+        }
+
+        return currentUser.getId().equals(tailorId);
+    }
+
+    // ========== EXISTING METHODS ==========
 
     /**
      * Get total tailor count

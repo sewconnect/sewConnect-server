@@ -23,6 +23,10 @@ public class TailorProfileDTO {
     private String location;
     private String nationality;
 
+    // Profile Picture (NEW FIELDS)
+    private String profilePictureUrl;
+    private String profilePicturePublicId;
+
     // Profile Stats
     private Integer totalGalleries;
     private Integer totalFollowers;
@@ -37,6 +41,7 @@ public class TailorProfileDTO {
     // Galleries
     private List<GalleryDTO> galleries;
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -91,6 +96,23 @@ public class TailorProfileDTO {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
+    }
+
+    // NEW GETTERS/SETTERS FOR PROFILE PICTURE
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public String getProfilePicturePublicId() {
+        return profilePicturePublicId;
+    }
+
+    public void setProfilePicturePublicId(String profilePicturePublicId) {
+        this.profilePicturePublicId = profilePicturePublicId;
     }
 
     public Integer getTotalGalleries() {

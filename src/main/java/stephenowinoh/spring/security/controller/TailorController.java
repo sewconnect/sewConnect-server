@@ -2,9 +2,11 @@ package stephenowinoh.spring.security.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import stephenowinoh.spring.security.DTO.TailorDTO;
 import stephenowinoh.spring.security.DTO.TailorProfileDTO;
+import stephenowinoh.spring.security.DTO.ProfileUpdateRequest;
 import stephenowinoh.spring.security.service.TailorService;
 
 import java.util.List;
@@ -12,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tailors")
-//@CrossOrigin(origins = "*")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "https://sewconnectplatform.vercel.app"
@@ -53,6 +54,172 @@ public class TailorController {
 
         return ResponseEntity.ok(profile);
     }
+
+    // ========== PROFILE PICTURE MANAGEMENT ==========
+
+    /**
+     * Upload/Update profile picture
+     */
+    @PutMapping("/{id}/profile-picture")
+    public ResponseEntity<?> updateProfilePicture(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+
+        try {
+            // Verify user owns this profile
+            if (!tailorService.isOwner(id, authentication)) {
+                return ResponseEntity
+                        .status(403)
+                        .body(Map.of("message", "Unauthorized"));
+            }
+
+            String profilePictureUrl = request.get("profilePictureUrl");
+            String publicId = request.get("publicId");
+
+            if (profilePictureUrl == null || profilePictureUrl.trim().isEmpty()) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(Map.of("message", "Profile picture URL is required"));
+            }
+
+            boolean updated = tailorService.updateProfilePicture(id, profilePictureUrl, publicId);
+
+            if (!updated) {
+                return ResponseEntity
+                        .status(404)
+                        .body(Map.of("message", "Tailor not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Profile picture updated successfully",
+                    "profilePictureUrl", profilePictureUrl
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Failed to update profile picture: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Delete profile picture
+     */
+    @DeleteMapping("/{id}/profile-picture")
+    public ResponseEntity<?> deleteProfilePicture(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        try {
+            // Verify user owns this profile
+            if (!tailorService.isOwner(id, authentication)) {
+                return ResponseEntity
+                        .status(403)
+                        .body(Map.of("message", "Unauthorized"));
+            }
+
+            boolean deleted = tailorService.deleteProfilePicture(id);
+
+            if (!deleted) {
+                return ResponseEntity
+                        .status(404)
+                        .body(Map.of("message", "Tailor not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Profile picture deleted successfully"
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Failed to delete profile picture: " + e.getMessage()));
+        }
+    }
+
+    // ========== PROFILE INFORMATION UPDATE ==========
+
+    /**
+     * Update tailor profile information
+     */
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long id,
+            @RequestBody ProfileUpdateRequest request,
+            Authentication authentication) {
+
+        try {
+            // Verify user owns this profile
+            if (!tailorService.isOwner(id, authentication)) {
+                return ResponseEntity
+                        .status(403)
+                        .body(Map.of("message", "Unauthorized"));
+            }
+
+            TailorProfileDTO updated = tailorService.updateProfile(id, request);
+
+            if (updated == null) {
+                return ResponseEntity
+                        .status(404)
+                        .body(Map.of("message", "Tailor not found"));
+            }
+
+            return ResponseEntity.ok(updated);
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Failed to update profile: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Add/Update specialty (comma-separated for multiple)
+     */
+    @PutMapping("/{id}/specialty")
+    public ResponseEntity<?> updateSpecialty(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+
+        try {
+            // Verify user owns this profile
+            if (!tailorService.isOwner(id, authentication)) {
+                return ResponseEntity
+                        .status(403)
+                        .body(Map.of("message", "Unauthorized"));
+            }
+
+            String specialty = request.get("specialty");
+
+            if (specialty == null || specialty.trim().isEmpty()) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(Map.of("message", "Specialty is required"));
+            }
+
+            boolean updated = tailorService.updateSpecialty(id, specialty);
+
+            if (!updated) {
+                return ResponseEntity
+                        .status(404)
+                        .body(Map.of("message", "Tailor not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Specialty updated successfully",
+                    "specialty", specialty
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Failed to update specialty: " + e.getMessage()));
+        }
+    }
+
+    // ========== EXISTING ENDPOINTS ==========
 
     @GetMapping("/specialty/{specialty}")
     public ResponseEntity<List<TailorDTO>> getTailorsBySpecialty(@PathVariable String specialty) {

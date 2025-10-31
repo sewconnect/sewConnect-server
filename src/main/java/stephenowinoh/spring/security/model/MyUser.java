@@ -42,6 +42,17 @@ public class MyUser implements UserDetails {
     private String location;
     private String nationality;
 
+    // Profile picture fields
+    @Column(name = "profile_picture_url", length = 500)
+    private String profilePictureUrl;
+
+    @Column(name = "profile_picture_public_id", length = 255)
+    private String profilePicturePublicId;
+
+    // Bio/About field
+    @Column(length = 1000)
+    private String bio;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -63,7 +74,6 @@ public class MyUser implements UserDetails {
     private List<Service> services = new ArrayList<>();
 
     // UserDetails Implementation
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -105,7 +115,7 @@ public class MyUser implements UserDetails {
         return isActive;
     }
 
-   //getter setter
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -185,6 +195,30 @@ public class MyUser implements UserDetails {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
+    }
+
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public String getProfilePicturePublicId() {
+        return profilePicturePublicId;
+    }
+
+    public void setProfilePicturePublicId(String profilePicturePublicId) {
+        this.profilePicturePublicId = profilePicturePublicId;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public LocalDateTime getCreatedAt() {
