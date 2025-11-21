@@ -48,3 +48,6 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
+
+### maven-git-versioning-extension
+.git-versioned-pom.xml

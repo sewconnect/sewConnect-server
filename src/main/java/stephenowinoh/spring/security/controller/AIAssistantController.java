@@ -12,7 +12,7 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class AIAssistantController {
 
-    @Value("${groq.api.key}")
+    @Value("${groq.api.key:}")
     private String groqApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();

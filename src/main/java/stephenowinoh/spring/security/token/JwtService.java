@@ -22,7 +22,7 @@ public class JwtService {
 //    private static final String SECRET = "";
 //    private static final Long VALIDITY = TimeUnit.MINUTES.toMillis(3);
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:}")
     private String SECRET;
 
     private static final Long VALIDITY = TimeUnit.HOURS.toMillis(6);

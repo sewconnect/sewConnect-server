@@ -29,7 +29,7 @@ import stephenowinoh.spring.security.token.JwtService;
 @EnableWebSocketSecurity
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${websocket.allowed-origins}")
+    @Value("${websocket.allowed-origins:*}")
     private String allowedOrigins;
 
     @Autowired

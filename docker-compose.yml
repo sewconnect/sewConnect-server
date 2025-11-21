@@ -40,34 +40,34 @@ services:
     networks:
       - sewconnect-network
 
-  app:
-    image: stephenexerer/tailor-connect:latest     # 👈 Added image name
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: sewconnect-app
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sewconnect
-      SPRING_DATASOURCE_USERNAME: sewconnect_user
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-localpassword}
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      WEBSOCKET_ALLOWED_ORIGINS: https://sewconnectplatform.vercel.app,http://localhost:3000,http://localhost:5173
-    ports:
-      - "6666:6666"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - sewconnect-network
-    restart: unless-stopped
+#  app:
+#    image: stephenexerer/tailor-connect:latest     # 👈 Added image name
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: sewconnect-app
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sewconnect
+#      SPRING_DATASOURCE_USERNAME: sewconnect_user
+#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-localpassword}
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#      SPRING_RABBITMQ_USERNAME: guest
+#      SPRING_RABBITMQ_PASSWORD: guest
+#      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+#      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+#      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+#      WEBSOCKET_ALLOWED_ORIGINS: https://sewconnectplatform.vercel.app,http://localhost:3000,http://localhost:5173
+#    ports:
+#      - "6666:6666"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#    networks:
+#      - sewconnect-network
+#    restart: unless-stopped
 
 volumes:
   postgres_data:
