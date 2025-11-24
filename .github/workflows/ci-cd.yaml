@@ -63,9 +63,6 @@ jobs:
           GROQ_API_KEY: test_groq_key
           JWT_SECRET: test_jwt_secret_key_for_testing_minimum_256_bits_required
           JWT_EXPIRATION: 86400000
-          CLOUDINARY_CLOUD_NAME: test_cloud
-          CLOUDINARY_API_KEY: test_key
-          CLOUDINARY_API_SECRET: test_secret
           WEBSOCKET_ALLOWED_ORIGINS: http://localhost:5173
 
       - name: Upload test results
