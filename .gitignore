@@ -48,3 +48,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.swp
+# Local development overrides
+application-local-override.yml
