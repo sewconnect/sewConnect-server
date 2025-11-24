@@ -42,11 +42,14 @@ public class securityConfiguration {
                 .authorizeHttpRequests(registry -> {
                     // ✅ PUBLIC ENDPOINTS - NO AUTHENTICATION REQUIRED
                     registry.requestMatchers(
+                            "/",
+                            "/error",
                             "/home",
                             "/register/**",
                             "/authenticate",
                             "/ws/**",
-                            "/api/ai/**"
+                            "/api/ai/**",
+                            "/actuator/health"
                     ).permitAll();
 
                     // CHAT ENDPOINTS - REQUIRE AUTHENTICATION (ANY AUTHENTICATED USER)
