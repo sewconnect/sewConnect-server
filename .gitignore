@@ -6,8 +6,6 @@ target/
 
 ### Spring Boot Config ###
 .env
-application-*.yml
-application-*.properties
 
 ### IntelliJ IDEA ###
 .idea/
